@@ -5,11 +5,11 @@ import { OrthographicCamera } from '../cameras/OrthographicCamera';
  * @author mrdoob / http://mrdoob.com/
  */
 
-function DirectionalLightShadow( light ) {
+function DirectionalLightShadow( ) {
 
 	LightShadow.call( this, new OrthographicCamera( - 5, 5, 5, - 5, 0.5, 500 ) );
 
-};
+}
 
 DirectionalLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
 

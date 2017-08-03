@@ -19,7 +19,7 @@ function Points( geometry, material ) {
 	this.geometry = geometry !== undefined ? geometry : new BufferGeometry();
 	this.material = material !== undefined ? material : new PointsMaterial( { color: Math.random() * 0xffffff } );
 
-};
+}
 
 Points.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
@@ -46,6 +46,7 @@ Points.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 			sphere.copy( geometry.boundingSphere );
 			sphere.applyMatrix4( matrixWorld );
+			sphere.radius += threshold;
 
 			if ( raycaster.ray.intersectsSphere( sphere ) === false ) return;
 
@@ -86,7 +87,7 @@ Points.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 			}
 
-			if ( (geometry && geometry.isBufferGeometry) ) {
+			if ( geometry.isBufferGeometry ) {
 
 				var index = geometry.index;
 				var attributes = geometry.attributes;

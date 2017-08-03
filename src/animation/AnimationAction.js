@@ -11,15 +11,7 @@ import { WrapAroundEnding, ZeroCurvatureEnding, ZeroSlopeEnding, LoopPingPong, L
  *
  */
 
-function AnimationAction() {
-
-	throw new Error( "THREE.AnimationAction: " +
-			"Use mixer.clipAction for construction." );
-
-};
-
-AnimationAction._new =
-		function AnimationAction( mixer, clip, localRoot ) {
+function AnimationAction( mixer, clip, localRoot ) {
 
 	this._mixer = mixer;
 	this._clip = clip;
@@ -74,19 +66,17 @@ AnimationAction._new =
 
 	this.repetitions = Infinity; 		// no. of repetitions when looping
 
-	this.paused = false;				// false -> zero effective time scale
-	this.enabled = true;				// true -> zero effective weight
+	this.paused = false;				// true -> zero effective time scale
+	this.enabled = true;				// false -> zero effective weight
 
 	this.clampWhenFinished 	= false;	// keep feeding the last frame?
 
 	this.zeroSlopeAtStart 	= true;		// for smooth interpolation w/o separate
 	this.zeroSlopeAtEnd		= true;		// clips for start, loop and end
 
-};
+}
 
-AnimationAction._new.prototype = {
-
-	constructor: AnimationAction._new,
+Object.assign( AnimationAction.prototype, {
 
 	// State & Scheduling
 
@@ -230,7 +220,7 @@ AnimationAction._new.prototype = {
 
 	// Time Scale Control
 
-	// set the weight stopping any scheduled warping
+	// set the time scale stopping any scheduled warping
 	// although .paused = true yields an effective time scale of zero, this
 	// method does *not* change .paused, because it would be confusing
 	setEffectiveTimeScale: function( timeScale ) {
@@ -281,7 +271,7 @@ AnimationAction._new.prototype = {
 
 		if ( interpolant === null ) {
 
-			interpolant = mixer._lendControlInterpolant(),
+			interpolant = mixer._lendControlInterpolant();
 			this._timeScaleInterpolant = interpolant;
 
 		}
@@ -337,7 +327,17 @@ AnimationAction._new.prototype = {
 	// Interna
 
 	_update: function( time, deltaTime, timeDirection, accuIndex ) {
+
 		// called by the mixer
+
+		if ( ! this.enabled ) {
+
+			// call ._updateWeight() to update ._effectiveWeight
+
+			this._updateWeight( time );
+			return;
+
+		}
 
 		var startTime = this._startTime;
 
@@ -481,7 +481,7 @@ AnimationAction._new.prototype = {
 			if ( loopCount === -1 ) {
 				// just started
 
-				this.loopCount = 0;
+				this._loopCount = 0;
 				this._setEndings( true, true, false );
 
 			}
@@ -644,7 +644,7 @@ AnimationAction._new.prototype = {
 
 		if ( interpolant === null ) {
 
-			interpolant = mixer._lendControlInterpolant(),
+			interpolant = mixer._lendControlInterpolant();
 			this._weightInterpolant = interpolant;
 
 		}
@@ -659,8 +659,7 @@ AnimationAction._new.prototype = {
 
 	}
 
-};
-
+} );
 
 
 export { AnimationAction };

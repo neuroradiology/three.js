@@ -30,10 +30,11 @@ function SpriteMaterial( parameters ) {
 
 	this.setValues( parameters );
 
-};
+}
 
 SpriteMaterial.prototype = Object.create( Material.prototype );
 SpriteMaterial.prototype.constructor = SpriteMaterial;
+SpriteMaterial.prototype.isSpriteMaterial = true;
 
 SpriteMaterial.prototype.copy = function ( source ) {
 

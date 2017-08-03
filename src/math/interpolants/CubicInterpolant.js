@@ -12,8 +12,7 @@ import { WrapAroundEnding, ZeroSlopeEnding } from '../../constants';
  * @author tschw
  */
 
-function CubicInterpolant(
-		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+function CubicInterpolant( parameterPositions, sampleValues, sampleSize, resultBuffer ) {
 
 	Interpolant.call(
 			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
@@ -23,10 +22,9 @@ function CubicInterpolant(
 	this._weightNext = -0;
 	this._offsetNext = -0;
 
-};
+}
 
-CubicInterpolant.prototype =
-		Object.assign( Object.create( Interpolant.prototype ), {
+CubicInterpolant.prototype = Object.assign( Object.create( Interpolant.prototype ), {
 
 	constructor: CubicInterpolant,
 

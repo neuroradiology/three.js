@@ -19,8 +19,10 @@ import { KeyframeTrackConstructor } from './KeyframeTrackConstructor';
  */
 
 function KeyframeTrack( name, times, values, interpolation ) {
+
 	KeyframeTrackConstructor.apply( this, arguments );
-};
+
+}
 
 KeyframeTrack.prototype = KeyframeTrackPrototype;
 KeyframeTrackPrototype.constructor = KeyframeTrack;
@@ -60,7 +62,7 @@ Object.assign( KeyframeTrack, {
 
 		} else {
 
-			// by default, we asssume a constructor compatible with the base
+			// by default, we assume a constructor compatible with the base
 			return new trackType(
 					json.name, json.times, json.values, json.interpolation );
 

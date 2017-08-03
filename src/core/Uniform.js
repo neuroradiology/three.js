@@ -13,24 +13,12 @@ function Uniform( value ) {
 
 	this.value = value;
 
-	this.dynamic = false;
+}
+
+Uniform.prototype.clone = function () {
+
+	return new Uniform( this.value.clone === undefined ? this.value : this.value.clone() );
 
 };
-
-Uniform.prototype = {
-
-	constructor: Uniform,
-
-	onUpdate: function ( callback ) {
-
-		this.dynamic = true;
-		this.onUpdateCallback = callback;
-
-		return this;
-
-	}
-
-};
-
 
 export { Uniform };

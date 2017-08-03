@@ -14,14 +14,14 @@ function NumberKeyframeTrack( name, times, values, interpolation ) {
 
 	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
 
-};
+}
 
 NumberKeyframeTrack.prototype =
 		Object.assign( Object.create( KeyframeTrackPrototype ), {
 
 	constructor: NumberKeyframeTrack,
 
-	ValueTypeName: 'number',
+	ValueTypeName: 'number'
 
 	// ValueBufferType is inherited
 

@@ -27,7 +27,7 @@ function Line( geometry, material, mode ) {
 	this.geometry = geometry !== undefined ? geometry : new BufferGeometry();
 	this.material = material !== undefined ? material : new LineBasicMaterial( { color: Math.random() * 0xffffff } );
 
-};
+}
 
 Line.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
@@ -69,7 +69,7 @@ Line.prototype = Object.assign( Object.create( Object3D.prototype ), {
 			var interRay = new Vector3();
 			var step = (this && this.isLineSegments) ? 2 : 1;
 
-			if ( (geometry && geometry.isBufferGeometry) ) {
+			if ( geometry.isBufferGeometry ) {
 
 				var index = geometry.index;
 				var attributes = geometry.attributes;
@@ -146,7 +146,7 @@ Line.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 				}
 
-			} else if ( (geometry && geometry.isGeometry) ) {
+			} else if ( geometry.isGeometry ) {
 
 				var vertices = geometry.vertices;
 				var nbVertices = vertices.length;

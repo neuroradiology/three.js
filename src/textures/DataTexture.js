@@ -14,10 +14,11 @@ function DataTexture( data, width, height, format, type, mapping, wrapS, wrapT, 
 	this.magFilter = magFilter !== undefined ? magFilter : NearestFilter;
 	this.minFilter = minFilter !== undefined ? minFilter : NearestFilter;
 
+	this.generateMipmaps = false;
 	this.flipY = false;
-	this.generateMipmaps  = false;
+	this.unpackAlignment = 1;
 
-};
+}
 
 DataTexture.prototype = Object.create( Texture.prototype );
 DataTexture.prototype.constructor = DataTexture;

@@ -10,9 +10,11 @@ function CubeTextureLoader( manager ) {
 
 	this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
 
-};
+}
 
 Object.assign( CubeTextureLoader.prototype, {
+
+	crossOrigin: 'Anonymous',
 
 	load: function ( urls, onLoad, onProgress, onError ) {
 

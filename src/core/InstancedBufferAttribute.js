@@ -10,22 +10,26 @@ function InstancedBufferAttribute( array, itemSize, meshPerAttribute ) {
 
 	this.meshPerAttribute = meshPerAttribute || 1;
 
-};
+}
 
-InstancedBufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-InstancedBufferAttribute.prototype.constructor = InstancedBufferAttribute;
+InstancedBufferAttribute.prototype = Object.assign( Object.create( BufferAttribute.prototype ), {
 
-InstancedBufferAttribute.prototype.isInstancedBufferAttribute = true;
+	constructor: InstancedBufferAttribute,
 
-InstancedBufferAttribute.prototype.copy = function ( source ) {
+	isInstancedBufferAttribute: true,
 
-	BufferAttribute.prototype.copy.call( this, source );
+	copy: function ( source ) {
 
-	this.meshPerAttribute = source.meshPerAttribute;
+		BufferAttribute.prototype.copy.call( this, source );
 
-	return this;
+		this.meshPerAttribute = source.meshPerAttribute;
 
-};
+		return this;
+
+	}
+
+} );
+
 
 
 export { InstancedBufferAttribute };

@@ -1,5 +1,5 @@
-import { getAudioContext } from '../audio/AudioContext';
-import { XHRLoader } from './XHRLoader';
+import { AudioContext } from '../audio/AudioContext';
+import { FileLoader } from './FileLoader';
 import { DefaultLoadingManager } from './LoadingManager';
 
 /**
@@ -10,17 +10,17 @@ function AudioLoader( manager ) {
 
 	this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
 
-};
+}
 
 Object.assign( AudioLoader.prototype, {
 
 	load: function ( url, onLoad, onProgress, onError ) {
 
-		var loader = new XHRLoader( this.manager );
+		var loader = new FileLoader( this.manager );
 		loader.setResponseType( 'arraybuffer' );
 		loader.load( url, function ( buffer ) {
 
-			var context = getAudioContext();
+			var context = AudioContext.getContext();
 
 			context.decodeAudioData( buffer, function ( audioBuffer ) {
 
