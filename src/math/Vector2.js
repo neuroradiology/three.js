@@ -14,7 +14,7 @@ function Vector2( x, y ) {
 
 Object.defineProperties( Vector2.prototype, {
 
-	"width" : {
+	"width": {
 
 		get: function () {
 
@@ -30,7 +30,7 @@ Object.defineProperties( Vector2.prototype, {
 
 	},
 
-	"height" : {
+	"height": {
 
 		get: function () {
 
@@ -237,6 +237,18 @@ Object.assign( Vector2.prototype, {
 
 	},
 
+	applyMatrix3: function ( m ) {
+
+		var x = this.x, y = this.y;
+		var e = m.elements;
+
+		this.x = e[ 0 ] * x + e[ 3 ] * y + e[ 6 ];
+		this.y = e[ 1 ] * x + e[ 4 ] * y + e[ 7 ];
+
+		return this;
+
+	},
+
 	min: function ( v ) {
 
 		this.x = Math.min( this.x, v.x );
@@ -266,21 +278,14 @@ Object.assign( Vector2.prototype, {
 
 	},
 
-	clampScalar: function () {
+	clampScalar: function ( minVal, maxVal ) {
 
-		var min = new Vector2();
-		var max = new Vector2();
+		this.x = Math.max( minVal, Math.min( maxVal, this.x ) );
+		this.y = Math.max( minVal, Math.min( maxVal, this.y ) );
 
-		return function clampScalar( minVal, maxVal ) {
+		return this;
 
-			min.set( minVal, minVal );
-			max.set( maxVal, maxVal );
-
-			return this.clamp( min, max );
-
-		};
-
-	}(),
+	},
 
 	clampLength: function ( min, max ) {
 
@@ -341,6 +346,12 @@ Object.assign( Vector2.prototype, {
 
 	},
 
+	cross: function ( v ) {
+
+		return this.x * v.y - this.y * v.x;
+
+	},
+
 	lengthSq: function () {
 
 		return this.x * this.x + this.y * this.y;
@@ -353,7 +364,7 @@ Object.assign( Vector2.prototype, {
 
 	},
 
-	lengthManhattan: function() {
+	manhattanLength: function () {
 
 		return Math.abs( this.x ) + Math.abs( this.y );
 
@@ -369,9 +380,7 @@ Object.assign( Vector2.prototype, {
 
 		// computes the angle in radians with respect to the positive x-axis
 
-		var angle = Math.atan2( this.y, this.x );
-
-		if ( angle < 0 ) angle += 2 * Math.PI;
+		var angle = Math.atan2( - this.y, - this.x ) + Math.PI;
 
 		return angle;
 
@@ -390,7 +399,7 @@ Object.assign( Vector2.prototype, {
 
 	},
 
-	distanceToManhattan: function ( v ) {
+	manhattanDistanceTo: function ( v ) {
 
 		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y );
 
@@ -470,6 +479,15 @@ Object.assign( Vector2.prototype, {
 
 		this.x = x * c - y * s + center.x;
 		this.y = x * s + y * c + center.y;
+
+		return this;
+
+	},
+
+	random: function () {
+
+		this.x = Math.random();
+		this.y = Math.random();
 
 		return this;
 

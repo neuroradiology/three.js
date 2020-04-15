@@ -1,12 +1,12 @@
-import { _Math } from '../math/Math';
+import { Vector3 } from '../math/Vector3.js';
 
 /**
  * @author benaadams / https://twitter.com/ben_a_adams
  */
 
-function InterleavedBufferAttribute( interleavedBuffer, itemSize, offset, normalized ) {
+var _vector = new Vector3();
 
-	this.uuid = _Math.generateUUID();
+function InterleavedBufferAttribute( interleavedBuffer, itemSize, offset, normalized ) {
 
 	this.data = interleavedBuffer;
 	this.itemSize = itemSize;
@@ -43,6 +43,24 @@ Object.defineProperties( InterleavedBufferAttribute.prototype, {
 Object.assign( InterleavedBufferAttribute.prototype, {
 
 	isInterleavedBufferAttribute: true,
+
+	applyMatrix4: function ( m ) {
+
+		for ( var i = 0, l = this.data.count; i < l; i ++ ) {
+
+			_vector.x = this.getX( i );
+			_vector.y = this.getY( i );
+			_vector.z = this.getZ( i );
+
+			_vector.applyMatrix4( m );
+
+			this.setXYZ( i, _vector.x, _vector.y, _vector.z );
+
+		}
+
+		return this;
+
+	},
 
 	setX: function ( index, x ) {
 

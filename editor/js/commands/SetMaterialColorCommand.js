@@ -3,46 +3,48 @@
  * Developed as part of a project at University of Applied Sciences and Arts Northwestern Switzerland (www.fhnw.ch)
  */
 
+import { Command } from '../Command.js';
+
 /**
+ * @param editor Editor
  * @param object THREE.Object3D
  * @param attributeName string
  * @param newValue integer representing a hex color value
  * @constructor
  */
+var SetMaterialColorCommand = function ( editor, object, attributeName, newValue, materialSlot ) {
 
-var SetMaterialColorCommand = function ( object, attributeName, newValue, slot ) {
-
-	Command.call( this );
+	Command.call( this, editor );
 
 	this.type = 'SetMaterialColorCommand';
 	this.name = 'Set Material.' + attributeName;
 	this.updatable = true;
 
 	this.object = object;
-	this.attributeName = attributeName;
-	this.slot = slot;
+	this.material = this.editor.getObjectMaterial( object, materialSlot );
 
-	var material = this.editor.getObjectMaterial( this.object, this.slot );
-
-	this.oldValue = ( material !== undefined ) ? material[ this.attributeName ].getHex() : undefined;
+	this.oldValue = ( this.material !== undefined ) ? this.material[ attributeName ].getHex() : undefined;
 	this.newValue = newValue;
-	
+
+	this.attributeName = attributeName;
+
 };
 
 SetMaterialColorCommand.prototype = {
 
 	execute: function () {
-		var material = this.editor.getObjectMaterial( this.object, this.slot )
-		material[ this.attributeName ].setHex( this.newValue );
-		this.editor.signals.materialChanged.dispatch( material );
+
+		this.material[ this.attributeName ].setHex( this.newValue );
+
+		this.editor.signals.materialChanged.dispatch( this.material );
 
 	},
 
 	undo: function () {
-		var material = this.editor.getObjectMaterial( this.object, this.slot )
 
-		material[ this.attributeName ].setHex( this.oldValue );
-		this.editor.signals.materialChanged.dispatch( material );
+		this.material[ this.attributeName ].setHex( this.oldValue );
+
+		this.editor.signals.materialChanged.dispatch( this.material );
 
 	},
 
@@ -77,3 +79,5 @@ SetMaterialColorCommand.prototype = {
 	}
 
 };
+
+export { SetMaterialColorCommand };

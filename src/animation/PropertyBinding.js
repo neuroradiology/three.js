@@ -8,6 +8,42 @@
  * @author tschw
  */
 
+// Characters [].:/ are reserved for track binding syntax.
+var _RESERVED_CHARS_RE = '\\[\\]\\.:\\/';
+var _reservedRe = new RegExp( '[' + _RESERVED_CHARS_RE + ']', 'g' );
+
+// Attempts to allow node names from any language. ES5's `\w` regexp matches
+// only latin characters, and the unicode \p{L} is not yet supported. So
+// instead, we exclude reserved characters and match everything else.
+var _wordChar = '[^' + _RESERVED_CHARS_RE + ']';
+var _wordCharOrDot = '[^' + _RESERVED_CHARS_RE.replace( '\\.', '' ) + ']';
+
+// Parent directories, delimited by '/' or ':'. Currently unused, but must
+// be matched to parse the rest of the track name.
+var _directoryRe = /((?:WC+[\/:])*)/.source.replace( 'WC', _wordChar );
+
+// Target node. May contain word characters (a-zA-Z0-9_) and '.' or '-'.
+var _nodeRe = /(WCOD+)?/.source.replace( 'WCOD', _wordCharOrDot );
+
+// Object on target node, and accessor. May not contain reserved
+// characters. Accessor may contain any character except closing bracket.
+var _objectRe = /(?:\.(WC+)(?:\[(.+)\])?)?/.source.replace( 'WC', _wordChar );
+
+// Property and accessor. May not contain reserved characters. Accessor may
+// contain any non-bracket characters.
+var _propertyRe = /\.(WC+)(?:\[(.+)\])?/.source.replace( 'WC', _wordChar );
+
+var _trackRe = new RegExp( ''
+	+ '^'
+	+ _directoryRe
+	+ _nodeRe
+	+ _objectRe
+	+ _propertyRe
+	+ '$'
+);
+
+var _supportedObjectNames = [ 'material', 'materials', 'bones' ];
+
 function Composite( targetGroup, path, optionalParsedPath ) {
 
 	var parsedPath = optionalParsedPath || PropertyBinding.parseTrackName( path );
@@ -35,8 +71,7 @@ Object.assign( Composite.prototype, {
 
 		var bindings = this._bindings;
 
-		for ( var i = this._targetGroup.nCachedObjects_,
-				  n = bindings.length; i !== n; ++ i ) {
+		for ( var i = this._targetGroup.nCachedObjects_, n = bindings.length; i !== n; ++ i ) {
 
 			bindings[ i ].setValue( array, offset );
 
@@ -48,8 +83,7 @@ Object.assign( Composite.prototype, {
 
 		var bindings = this._bindings;
 
-		for ( var i = this._targetGroup.nCachedObjects_,
-				  n = bindings.length; i !== n; ++ i ) {
+		for ( var i = this._targetGroup.nCachedObjects_, n = bindings.length; i !== n; ++ i ) {
 
 			bindings[ i ].bind();
 
@@ -61,8 +95,7 @@ Object.assign( Composite.prototype, {
 
 		var bindings = this._bindings;
 
-		for ( var i = this._targetGroup.nCachedObjects_,
-				  n = bindings.length; i !== n; ++ i ) {
+		for ( var i = this._targetGroup.nCachedObjects_, n = bindings.length; i !== n; ++ i ) {
 
 			bindings[ i ].unbind();
 
@@ -106,96 +139,66 @@ Object.assign( PropertyBinding, {
 	 * Replaces spaces with underscores and removes unsupported characters from
 	 * node names, to ensure compatibility with parseTrackName().
 	 *
-	 * @param  {string} name Node name to be sanitized.
+	 * @param {string} name Node name to be sanitized.
 	 * @return {string}
 	 */
 	sanitizeNodeName: function ( name ) {
 
-		return name.replace( /\s/g, '_' ).replace( /[^\w-]/g, '' );
+		return name.replace( /\s/g, '_' ).replace( _reservedRe, '' );
 
 	},
 
-	parseTrackName: function () {
+	parseTrackName: function ( trackName ) {
 
-		// Parent directories, delimited by '/' or ':'. Currently unused, but must
-		// be matched to parse the rest of the track name.
-		var directoryRe = /((?:[\w-]+[\/:])*)/;
+		var matches = _trackRe.exec( trackName );
 
-		// Target node. May contain word characters (a-zA-Z0-9_) and '.' or '-'.
-		var nodeRe = /([\w-\.]+)?/;
+		if ( ! matches ) {
 
-		// Object on target node, and accessor. Name may contain only word
-		// characters. Accessor may contain any character except closing bracket.
-		var objectRe = /(?:\.([\w-]+)(?:\[(.+)\])?)?/;
+			throw new Error( 'PropertyBinding: Cannot parse trackName: ' + trackName );
 
-		// Property and accessor. May contain only word characters. Accessor may
-		// contain any non-bracket characters.
-		var propertyRe = /\.([\w-]+)(?:\[(.+)\])?/;
+		}
 
-		var trackRe = new RegExp(''
-			+ '^'
-			+ directoryRe.source
-			+ nodeRe.source
-			+ objectRe.source
-			+ propertyRe.source
-			+ '$'
-		);
+		var results = {
+			// directoryName: matches[ 1 ], // (tschw) currently unused
+			nodeName: matches[ 2 ],
+			objectName: matches[ 3 ],
+			objectIndex: matches[ 4 ],
+			propertyName: matches[ 5 ], // required
+			propertyIndex: matches[ 6 ]
+		};
 
-		var supportedObjectNames = [ 'material', 'materials', 'bones' ];
+		var lastDot = results.nodeName && results.nodeName.lastIndexOf( '.' );
 
-		return function ( trackName ) {
+		if ( lastDot !== undefined && lastDot !== - 1 ) {
 
-				var matches = trackRe.exec( trackName );
+			var objectName = results.nodeName.substring( lastDot + 1 );
 
-				if ( ! matches ) {
+			// Object names must be checked against a whitelist. Otherwise, there
+			// is no way to parse 'foo.bar.baz': 'baz' must be a property, but
+			// 'bar' could be the objectName, or part of a nodeName (which can
+			// include '.' characters).
+			if ( _supportedObjectNames.indexOf( objectName ) !== - 1 ) {
 
-					throw new Error( 'PropertyBinding: Cannot parse trackName: ' + trackName );
+				results.nodeName = results.nodeName.substring( 0, lastDot );
+				results.objectName = objectName;
 
-				}
+			}
 
-				var results = {
-					// directoryName: matches[ 1 ], // (tschw) currently unused
-					nodeName: matches[ 2 ],
-					objectName: matches[ 3 ],
-					objectIndex: matches[ 4 ],
-					propertyName: matches[ 5 ],     // required
-					propertyIndex: matches[ 6 ]
-				};
+		}
 
-				var lastDot = results.nodeName && results.nodeName.lastIndexOf( '.' );
+		if ( results.propertyName === null || results.propertyName.length === 0 ) {
 
-				if ( lastDot !== undefined && lastDot !== -1 ) {
+			throw new Error( 'PropertyBinding: can not parse propertyName from trackName: ' + trackName );
 
-					var objectName = results.nodeName.substring( lastDot + 1 );
+		}
 
-					// Object names must be checked against a whitelist. Otherwise, there
-					// is no way to parse 'foo.bar.baz': 'baz' must be a property, but
-					// 'bar' could be the objectName, or part of a nodeName (which can
-					// include '.' characters).
-					if ( supportedObjectNames.indexOf( objectName ) !== -1 ) {
+		return results;
 
-						results.nodeName = results.nodeName.substring( 0, lastDot );
-						results.objectName = objectName;
-
-					}
-
-				}
-
-				if ( results.propertyName === null || results.propertyName.length === 0 ) {
-
-					throw new Error( 'PropertyBinding: can not parse propertyName from trackName: ' + trackName );
-
-				}
-
-				return results;
-
-			};
-
-	}(),
+	},
 
 	findNode: function ( root, nodeName ) {
 
-		if ( ! nodeName || nodeName === "" || nodeName === "root" || nodeName === "." || nodeName === - 1 || nodeName === root.name || nodeName === root.uuid ) {
+		if ( ! nodeName || nodeName === "" || nodeName === "." || nodeName === - 1 || nodeName === root.name || nodeName === root.uuid ) {
 
 			return root;
 
@@ -204,27 +207,9 @@ Object.assign( PropertyBinding, {
 		// search into skeleton bones.
 		if ( root.skeleton ) {
 
-			var searchSkeleton = function ( skeleton ) {
+			var bone = root.skeleton.getBoneByName( nodeName );
 
-				for ( var i = 0; i < skeleton.bones.length; i ++ ) {
-
-					var bone = skeleton.bones[ i ];
-
-					if ( bone.name === nodeName ) {
-
-						return bone;
-
-					}
-
-				}
-
-				return null;
-
-			};
-
-			var bone = searchSkeleton( root.skeleton );
-
-			if ( bone ) {
+			if ( bone !== undefined ) {
 
 				return bone;
 
@@ -333,20 +318,20 @@ Object.assign( PropertyBinding.prototype, { // prototype, continued
 
 			function setValue_direct( buffer, offset ) {
 
-				this.node[ this.propertyName ] = buffer[ offset ];
+				this.targetObject[ this.propertyName ] = buffer[ offset ];
 
 			},
 
 			function setValue_direct_setNeedsUpdate( buffer, offset ) {
 
-				this.node[ this.propertyName ] = buffer[ offset ];
+				this.targetObject[ this.propertyName ] = buffer[ offset ];
 				this.targetObject.needsUpdate = true;
 
 			},
 
 			function setValue_direct_setMatrixWorldNeedsUpdate( buffer, offset ) {
 
-				this.node[ this.propertyName ] = buffer[ offset ];
+				this.targetObject[ this.propertyName ] = buffer[ offset ];
 				this.targetObject.matrixWorldNeedsUpdate = true;
 
 			}
@@ -479,8 +464,7 @@ Object.assign( PropertyBinding.prototype, { // prototype, continued
 
 		if ( ! targetObject ) {
 
-			targetObject = PropertyBinding.findNode(
-					this.rootNode, parsedPath.nodeName ) || this.rootNode;
+			targetObject = PropertyBinding.findNode( this.rootNode, parsedPath.nodeName ) || this.rootNode;
 
 			this.node = targetObject;
 
@@ -598,15 +582,15 @@ Object.assign( PropertyBinding.prototype, { // prototype, continued
 		// determine versioning scheme
 		var versioning = this.Versioning.None;
 
+		this.targetObject = targetObject;
+
 		if ( targetObject.needsUpdate !== undefined ) { // material
 
 			versioning = this.Versioning.NeedsUpdate;
-			this.targetObject = targetObject;
 
 		} else if ( targetObject.matrixWorldNeedsUpdate !== undefined ) { // node transform
 
 			versioning = this.Versioning.MatrixWorldNeedsUpdate;
-			this.targetObject = targetObject;
 
 		}
 
@@ -718,7 +702,7 @@ Object.assign( PropertyBinding.prototype, { // prototype, continued
 
 } );
 
-//!\ DECLARE ALIAS AFTER assign prototype !
+// DECLARE ALIAS AFTER assign prototype
 Object.assign( PropertyBinding.prototype, {
 
 	// initial state of these methods that calls 'bind'

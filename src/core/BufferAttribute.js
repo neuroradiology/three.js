@@ -1,12 +1,14 @@
-import { Vector4 } from '../math/Vector4';
-import { Vector3 } from '../math/Vector3';
-import { Vector2 } from '../math/Vector2';
-import { Color } from '../math/Color';
-import { _Math } from '../math/Math';
+import { Vector4 } from '../math/Vector4.js';
+import { Vector3 } from '../math/Vector3.js';
+import { Vector2 } from '../math/Vector2.js';
+import { Color } from '../math/Color.js';
+import { StaticDrawUsage } from '../constants.js';
 
 /**
  * @author mrdoob / http://mrdoob.com/
  */
+
+var _vector = new Vector3();
 
 function BufferAttribute( array, itemSize, normalized ) {
 
@@ -16,7 +18,6 @@ function BufferAttribute( array, itemSize, normalized ) {
 
 	}
 
-	this.uuid = _Math.generateUUID();
 	this.name = '';
 
 	this.array = array;
@@ -24,10 +25,8 @@ function BufferAttribute( array, itemSize, normalized ) {
 	this.count = array !== undefined ? array.length / itemSize : 0;
 	this.normalized = normalized === true;
 
-	this.dynamic = false;
+	this.usage = StaticDrawUsage;
 	this.updateRange = { offset: 0, count: - 1 };
-
-	this.onUploadCallback = function () {};
 
 	this.version = 0;
 
@@ -47,22 +46,11 @@ Object.assign( BufferAttribute.prototype, {
 
 	isBufferAttribute: true,
 
-	setArray: function ( array ) {
+	onUploadCallback: function () {},
 
-		if ( Array.isArray( array ) ) {
+	setUsage: function ( value ) {
 
-			throw new TypeError( 'THREE.BufferAttribute: array should be a Typed Array.' );
-
-		}
-
-		this.count = array !== undefined ? array.length / this.itemSize : 0;
-		this.array = array;
-
-	},
-
-	setDynamic: function ( value ) {
-
-		this.dynamic = value;
+		this.usage = value;
 
 		return this;
 
@@ -70,12 +58,13 @@ Object.assign( BufferAttribute.prototype, {
 
 	copy: function ( source ) {
 
+		this.name = source.name;
 		this.array = new source.array.constructor( source.array );
 		this.itemSize = source.itemSize;
 		this.count = source.count;
 		this.normalized = source.normalized;
 
-		this.dynamic = source.dynamic;
+		this.usage = source.usage;
 
 		return this;
 
@@ -122,24 +111,6 @@ Object.assign( BufferAttribute.prototype, {
 			array[ offset ++ ] = color.r;
 			array[ offset ++ ] = color.g;
 			array[ offset ++ ] = color.b;
-
-		}
-
-		return this;
-
-	},
-
-	copyIndicesArray: function ( indices ) {
-
-		var array = this.array, offset = 0;
-
-		for ( var i = 0, l = indices.length; i < l; i ++ ) {
-
-			var index = indices[ i ];
-
-			array[ offset ++ ] = index.a;
-			array[ offset ++ ] = index.b;
-			array[ offset ++ ] = index.c;
 
 		}
 
@@ -215,6 +186,78 @@ Object.assign( BufferAttribute.prototype, {
 			array[ offset ++ ] = vector.y;
 			array[ offset ++ ] = vector.z;
 			array[ offset ++ ] = vector.w;
+
+		}
+
+		return this;
+
+	},
+
+	applyMatrix3: function ( m ) {
+
+		for ( var i = 0, l = this.count; i < l; i ++ ) {
+
+			_vector.x = this.getX( i );
+			_vector.y = this.getY( i );
+			_vector.z = this.getZ( i );
+
+			_vector.applyMatrix3( m );
+
+			this.setXYZ( i, _vector.x, _vector.y, _vector.z );
+
+		}
+
+		return this;
+
+	},
+
+	applyMatrix4: function ( m ) {
+
+		for ( var i = 0, l = this.count; i < l; i ++ ) {
+
+			_vector.x = this.getX( i );
+			_vector.y = this.getY( i );
+			_vector.z = this.getZ( i );
+
+			_vector.applyMatrix4( m );
+
+			this.setXYZ( i, _vector.x, _vector.y, _vector.z );
+
+		}
+
+		return this;
+
+	},
+
+	applyNormalMatrix: function ( m ) {
+
+		for ( var i = 0, l = this.count; i < l; i ++ ) {
+
+			_vector.x = this.getX( i );
+			_vector.y = this.getY( i );
+			_vector.z = this.getZ( i );
+
+			_vector.applyNormalMatrix( m );
+
+			this.setXYZ( i, _vector.x, _vector.y, _vector.z );
+
+		}
+
+		return this;
+
+	},
+
+	transformDirection: function ( m ) {
+
+		for ( var i = 0, l = this.count; i < l; i ++ ) {
+
+			_vector.x = this.getX( i );
+			_vector.y = this.getY( i );
+			_vector.z = this.getZ( i );
+
+			_vector.transformDirection( m );
+
+			this.setXYZ( i, _vector.x, _vector.y, _vector.z );
 
 		}
 
@@ -336,15 +379,26 @@ Object.assign( BufferAttribute.prototype, {
 
 		return new this.constructor( this.array, this.itemSize ).copy( this );
 
+	},
+
+	toJSON: function () {
+
+		return {
+			itemSize: this.itemSize,
+			type: this.array.constructor.name,
+			array: Array.prototype.slice.call( this.array ),
+			normalized: this.normalized
+		};
+
 	}
 
 } );
 
 //
 
-function Int8BufferAttribute( array, itemSize ) {
+function Int8BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Int8Array( array ), itemSize );
+	BufferAttribute.call( this, new Int8Array( array ), itemSize, normalized );
 
 }
 
@@ -352,9 +406,9 @@ Int8BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Int8BufferAttribute.prototype.constructor = Int8BufferAttribute;
 
 
-function Uint8BufferAttribute( array, itemSize ) {
+function Uint8BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Uint8Array( array ), itemSize );
+	BufferAttribute.call( this, new Uint8Array( array ), itemSize, normalized );
 
 }
 
@@ -362,9 +416,9 @@ Uint8BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Uint8BufferAttribute.prototype.constructor = Uint8BufferAttribute;
 
 
-function Uint8ClampedBufferAttribute( array, itemSize ) {
+function Uint8ClampedBufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Uint8ClampedArray( array ), itemSize );
+	BufferAttribute.call( this, new Uint8ClampedArray( array ), itemSize, normalized );
 
 }
 
@@ -372,9 +426,9 @@ Uint8ClampedBufferAttribute.prototype = Object.create( BufferAttribute.prototype
 Uint8ClampedBufferAttribute.prototype.constructor = Uint8ClampedBufferAttribute;
 
 
-function Int16BufferAttribute( array, itemSize ) {
+function Int16BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Int16Array( array ), itemSize );
+	BufferAttribute.call( this, new Int16Array( array ), itemSize, normalized );
 
 }
 
@@ -382,9 +436,9 @@ Int16BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Int16BufferAttribute.prototype.constructor = Int16BufferAttribute;
 
 
-function Uint16BufferAttribute( array, itemSize ) {
+function Uint16BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Uint16Array( array ), itemSize );
+	BufferAttribute.call( this, new Uint16Array( array ), itemSize, normalized );
 
 }
 
@@ -392,9 +446,9 @@ Uint16BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Uint16BufferAttribute.prototype.constructor = Uint16BufferAttribute;
 
 
-function Int32BufferAttribute( array, itemSize ) {
+function Int32BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Int32Array( array ), itemSize );
+	BufferAttribute.call( this, new Int32Array( array ), itemSize, normalized );
 
 }
 
@@ -402,9 +456,9 @@ Int32BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Int32BufferAttribute.prototype.constructor = Int32BufferAttribute;
 
 
-function Uint32BufferAttribute( array, itemSize ) {
+function Uint32BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Uint32Array( array ), itemSize );
+	BufferAttribute.call( this, new Uint32Array( array ), itemSize, normalized );
 
 }
 
@@ -412,9 +466,9 @@ Uint32BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Uint32BufferAttribute.prototype.constructor = Uint32BufferAttribute;
 
 
-function Float32BufferAttribute( array, itemSize ) {
+function Float32BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Float32Array( array ), itemSize );
+	BufferAttribute.call( this, new Float32Array( array ), itemSize, normalized );
 
 }
 
@@ -422,9 +476,9 @@ Float32BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
 Float32BufferAttribute.prototype.constructor = Float32BufferAttribute;
 
 
-function Float64BufferAttribute( array, itemSize ) {
+function Float64BufferAttribute( array, itemSize, normalized ) {
 
-	BufferAttribute.call( this, new Float64Array( array ), itemSize );
+	BufferAttribute.call( this, new Float64Array( array ), itemSize, normalized );
 
 }
 

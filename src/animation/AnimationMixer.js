@@ -1,9 +1,10 @@
-import { AnimationAction } from './AnimationAction';
-import { EventDispatcher } from '../core/EventDispatcher';
-import { LinearInterpolant } from '../math/interpolants/LinearInterpolant';
-import { PropertyBinding } from './PropertyBinding';
-import { PropertyMixer } from './PropertyMixer';
-import { AnimationClip } from './AnimationClip';
+import { AnimationAction } from './AnimationAction.js';
+import { EventDispatcher } from '../core/EventDispatcher.js';
+import { LinearInterpolant } from '../math/interpolants/LinearInterpolant.js';
+import { PropertyBinding } from './PropertyBinding.js';
+import { PropertyMixer } from './PropertyMixer.js';
+import { AnimationClip } from './AnimationClip.js';
+import { NormalAnimationBlendMode } from '../constants';
 
 /**
  *
@@ -27,7 +28,9 @@ function AnimationMixer( root ) {
 
 }
 
-Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
+AnimationMixer.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
+
+	constructor: AnimationMixer,
 
 	_bindAction: function ( action, prototypeAction ) {
 
@@ -77,7 +80,7 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 				}
 
 				var path = prototypeAction && prototypeAction.
-						_propertyBindings[ i ].binding.parsedPath;
+					_propertyBindings[ i ].binding.parsedPath;
 
 				binding = new PropertyMixer(
 					PropertyBinding.create( root, trackName, path ),
@@ -174,8 +177,8 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 		this._actionsByClip = {};
 		// inside:
 		// {
-		// 		knownActions: Array< AnimationAction >	- used as prototypes
-		// 		actionByRoot: AnimationAction			- lookup
+		// 	knownActions: Array< AnimationAction > - used as prototypes
+		// 	actionByRoot: AnimationAction - lookup
 		// }
 
 
@@ -193,16 +196,40 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 		this.stats = {
 
 			actions: {
-				get total() { return scope._actions.length; },
-				get inUse() { return scope._nActiveActions; }
+				get total() {
+
+					return scope._actions.length;
+
+				},
+				get inUse() {
+
+					return scope._nActiveActions;
+
+				}
 			},
 			bindings: {
-				get total() { return scope._bindings.length; },
-				get inUse() { return scope._nActiveBindings; }
+				get total() {
+
+					return scope._bindings.length;
+
+				},
+				get inUse() {
+
+					return scope._nActiveBindings;
+
+				}
 			},
 			controlInterpolants: {
-				get total() { return scope._controlInterpolants.length; },
-				get inUse() { return scope._nActiveControlInterpolants; }
+				get total() {
+
+					return scope._controlInterpolants.length;
+
+				},
+				get inUse() {
+
+					return scope._nActiveControlInterpolants;
+
+				}
 			}
 
 		};
@@ -402,9 +429,7 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 
 		delete bindingByName[ trackName ];
 
-		remove_empty_map: {
-
-			for ( var _ in bindingByName ) break remove_empty_map;
+		if ( Object.keys( bindingByName ).length === 0 ) {
 
 			delete bindingsByRoot[ rootUuid ];
 
@@ -492,7 +517,7 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 	// return an action for a clip optionally using a custom root target
 	// object (this method allocates a lot of dynamic memory in case a
 	// previously unknown clip/root combination is specified)
-	clipAction: function ( clip, optionalRoot ) {
+	clipAction: function ( clip, optionalRoot, blendMode ) {
 
 		var root = optionalRoot || this._root,
 			rootUuid = root.uuid,
@@ -505,12 +530,26 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 			actionsForClip = this._actionsByClip[ clipUuid ],
 			prototypeAction = null;
 
+		if ( blendMode === undefined ) {
+
+			if ( clipObject !== null ) {
+
+				blendMode = clipObject.blendMode;
+
+			} else {
+
+				blendMode = NormalAnimationBlendMode;
+
+			}
+
+		}
+
 		if ( actionsForClip !== undefined ) {
 
 			var existingAction =
 					actionsForClip.actionByRoot[ rootUuid ];
 
-			if ( existingAction !== undefined ) {
+			if ( existingAction !== undefined && existingAction.blendMode === blendMode ) {
 
 				return existingAction;
 
@@ -530,7 +569,7 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 		if ( clipObject === null ) return null;
 
 		// allocate all resources required to run it
-		var newAction = new AnimationAction( this, clipObject, optionalRoot );
+		var newAction = new AnimationAction( this, clipObject, optionalRoot, blendMode );
 
 		this._bindAction( newAction, prototypeAction );
 
@@ -626,6 +665,20 @@ Object.assign( AnimationMixer.prototype, EventDispatcher.prototype, {
 		}
 
 		return this;
+
+	},
+
+	// Allows you to seek to a specific time in an animation.
+	setTime: function ( timeInSeconds ) {
+
+		this.time = 0; // Zero out time attribute for AnimationMixer object;
+		for ( var i = 0; i < this._actions.length; i ++ ) {
+
+			this._actions[ i ].time = 0; // Zero out time attribute for all associated AnimationAction objects.
+
+		}
+
+		return this.update( timeInSeconds ); // Update used to set exact time. Returns "this" AnimationMixer object.
 
 	},
 

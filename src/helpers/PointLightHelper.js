@@ -3,9 +3,9 @@
  * @author mrdoob / http://mrdoob.com/
  */
 
-import { Mesh } from '../objects/Mesh';
-import { MeshBasicMaterial } from '../materials/MeshBasicMaterial';
-import { SphereBufferGeometry } from '../geometries/SphereGeometry';
+import { Mesh } from '../objects/Mesh.js';
+import { MeshBasicMaterial } from '../materials/MeshBasicMaterial.js';
+import { SphereBufferGeometry } from '../geometries/SphereGeometry.js';
 
 function PointLightHelper( light, sphereSize, color ) {
 
@@ -15,9 +15,11 @@ function PointLightHelper( light, sphereSize, color ) {
 	this.color = color;
 
 	var geometry = new SphereBufferGeometry( sphereSize, 4, 2 );
-	var material = new MeshBasicMaterial( { wireframe: true, fog: false } );
+	var material = new MeshBasicMaterial( { wireframe: true, fog: false, toneMapped: false } );
 
 	Mesh.call( this, geometry, material );
+
+	this.type = 'PointLightHelper';
 
 	this.matrix = this.light.matrixWorld;
 	this.matrixAutoUpdate = false;
@@ -26,7 +28,7 @@ function PointLightHelper( light, sphereSize, color ) {
 
 
 	/*
-	var distanceGeometry = new THREE.IcosahedronGeometry( 1, 2 );
+	var distanceGeometry = new THREE.IcosahedronBufferGeometry( 1, 2 );
 	var distanceMaterial = new THREE.MeshBasicMaterial( { color: hexColor, fog: false, wireframe: true, opacity: 0.1, transparent: true } );
 
 	this.lightSphere = new THREE.Mesh( bulbGeometry, bulbMaterial );

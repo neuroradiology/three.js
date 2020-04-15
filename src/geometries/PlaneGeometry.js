@@ -3,9 +3,9 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Geometry } from '../core/Geometry';
-import { BufferGeometry } from '../core/BufferGeometry';
-import { Float32BufferAttribute } from '../core/BufferAttribute';
+import { Geometry } from '../core/Geometry.js';
+import { BufferGeometry } from '../core/BufferGeometry.js';
+import { Float32BufferAttribute } from '../core/BufferAttribute.js';
 
 // PlaneGeometry
 
@@ -44,6 +44,9 @@ function PlaneBufferGeometry( width, height, widthSegments, heightSegments ) {
 		widthSegments: widthSegments,
 		heightSegments: heightSegments
 	};
+
+	width = width || 1;
+	height = height || 1;
 
 	var width_half = width / 2;
 	var height_half = height / 2;
@@ -110,9 +113,9 @@ function PlaneBufferGeometry( width, height, widthSegments, heightSegments ) {
 	// build geometry
 
 	this.setIndex( indices );
-	this.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	this.addAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-	this.addAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+	this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+	this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+	this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
 
 }
 

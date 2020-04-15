@@ -1,4 +1,4 @@
-import { BufferGeometry } from './BufferGeometry';
+import { BufferGeometry } from './BufferGeometry.js';
 
 /**
  * @author benaadams / https://twitter.com/ben_a_adams
@@ -19,47 +19,31 @@ InstancedBufferGeometry.prototype = Object.assign( Object.create( BufferGeometry
 
 	isInstancedBufferGeometry: true,
 
-	addGroup: function ( start, count, materialIndex ) {
+	copy: function ( source ) {
 
-		this.groups.push( {
+		BufferGeometry.prototype.copy.call( this, source );
 
-			start: start,
-			count: count,
-			materialIndex: materialIndex
+		this.maxInstancedCount = source.maxInstancedCount;
 
-		} );
+		return this;
 
 	},
 
-	copy: function ( source ) {
+	clone: function () {
 
-		var index = source.index;
+		return new this.constructor().copy( this );
 
-		if ( index !== null ) {
+	},
 
-			this.setIndex( index.clone() );
+	toJSON: function () {
 
-		}
+		var data = BufferGeometry.prototype.toJSON.call( this );
 
-		var attributes = source.attributes;
+		data.maxInstancedCount = this.maxInstancedCount;
 
-		for ( var name in attributes ) {
+		data.isInstancedBufferGeometry = true;
 
-			var attribute = attributes[ name ];
-			this.addAttribute( name, attribute.clone() );
-
-		}
-
-		var groups = source.groups;
-
-		for ( var i = 0, l = groups.length; i < l; i ++ ) {
-
-			var group = groups[ i ];
-			this.addGroup( group.start, group.count, group.materialIndex );
-
-		}
-
-		return this;
+		return data;
 
 	}
 

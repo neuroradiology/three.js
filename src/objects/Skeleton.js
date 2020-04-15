@@ -1,4 +1,4 @@
-import { Matrix4 } from '../math/Matrix4';
+import { Matrix4 } from '../math/Matrix4.js';
 
 /**
  * @author mikael emtinger / http://gomo.se/
@@ -6,6 +6,9 @@ import { Matrix4 } from '../math/Matrix4';
  * @author michael guerrero / http://realitymeltdown.com
  * @author ikerr / http://verold.com
  */
+
+var _offsetMatrix = new Matrix4();
+var _identityMatrix = new Matrix4();
 
 function Skeleton( bones, boneInverses ) {
 
@@ -15,6 +18,8 @@ function Skeleton( bones, boneInverses ) {
 
 	this.bones = bones.slice( 0 );
 	this.boneMatrices = new Float32Array( this.bones.length * 16 );
+
+	this.frame = - 1;
 
 	// use the supplied bone inverses or calculate the inverses
 
@@ -113,44 +118,67 @@ Object.assign( Skeleton.prototype, {
 
 	},
 
-	update: ( function () {
+	update: function () {
 
-		var offsetMatrix = new Matrix4();
-		var identityMatrix = new Matrix4();
+		var bones = this.bones;
+		var boneInverses = this.boneInverses;
+		var boneMatrices = this.boneMatrices;
+		var boneTexture = this.boneTexture;
 
-		return function update() {
+		// flatten bone matrices to array
 
-			var bones = this.bones;
-			var boneInverses = this.boneInverses;
-			var boneMatrices = this.boneMatrices;
-			var boneTexture = this.boneTexture;
+		for ( var i = 0, il = bones.length; i < il; i ++ ) {
 
-			// flatten bone matrices to array
+			// compute the offset between the current and the original transform
 
-			for ( var i = 0, il = bones.length; i < il; i ++ ) {
+			var matrix = bones[ i ] ? bones[ i ].matrixWorld : _identityMatrix;
 
-				// compute the offset between the current and the original transform
+			_offsetMatrix.multiplyMatrices( matrix, boneInverses[ i ] );
+			_offsetMatrix.toArray( boneMatrices, i * 16 );
 
-				var matrix = bones[ i ] ? bones[ i ].matrixWorld : identityMatrix;
+		}
 
-				offsetMatrix.multiplyMatrices( matrix, boneInverses[ i ] );
-				offsetMatrix.toArray( boneMatrices, i * 16 );
+		if ( boneTexture !== undefined ) {
 
-			}
+			boneTexture.needsUpdate = true;
 
-			if ( boneTexture !== undefined ) {
+		}
 
-				boneTexture.needsUpdate = true;
-
-			}
-
-		};
-
-	} )(),
+	},
 
 	clone: function () {
 
 		return new Skeleton( this.bones, this.boneInverses );
+
+	},
+
+	getBoneByName: function ( name ) {
+
+		for ( var i = 0, il = this.bones.length; i < il; i ++ ) {
+
+			var bone = this.bones[ i ];
+
+			if ( bone.name === name ) {
+
+				return bone;
+
+			}
+
+		}
+
+		return undefined;
+
+	},
+
+	dispose: function ( ) {
+
+		if ( this.boneTexture ) {
+
+			this.boneTexture.dispose();
+
+			this.boneTexture = undefined;
+
+		}
 
 	}
 
