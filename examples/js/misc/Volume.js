@@ -4,7 +4,6 @@
  * For now it only handles 3 dimensional data.
  * See the webgl_loader_nrrd.html example and the loaderNRRD.js file to see how to use this class.
  * @class
- * @author Valentin Demeusy / https://github.com/stity
  * @param   {number}        xLength         Width of the volume
  * @param   {number}        yLength         Length of the volume
  * @param   {number}        zLength         Depth of the volume
@@ -435,6 +434,7 @@ THREE.Volume.prototype = {
 		var datasize = this.data.length;
 
 		var i = 0;
+
 		for ( i = 0; i < datasize; i ++ ) {
 
 			if ( ! isNaN( this.data[ i ] ) ) {
@@ -446,6 +446,7 @@ THREE.Volume.prototype = {
 			}
 
 		}
+
 		this.min = min;
 		this.max = max;
 
