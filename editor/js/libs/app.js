@@ -1,16 +1,14 @@
-
 var APP = {
 
 	Player: function () {
 
 		var renderer = new THREE.WebGLRenderer( { antialias: true } );
-		renderer.setPixelRatio( window.devicePixelRatio );
-		renderer.outputEncoding = THREE.sRGBEncoding;
+		renderer.setPixelRatio( window.devicePixelRatio ); // TODO: Use player.setPixelRatio()
 
 		var loader = new THREE.ObjectLoader();
 		var camera, scene;
 
-		var vrButton = VRButton.createButton( renderer );
+		var vrButton = VRButton.createButton( renderer ); // eslint-disable-line no-undef
 
 		var events = {};
 
@@ -31,7 +29,6 @@ var APP = {
 			if ( project.shadowType !== undefined ) renderer.shadowMap.type = project.shadowType;
 			if ( project.toneMapping !== undefined ) renderer.toneMapping = project.toneMapping;
 			if ( project.toneMappingExposure !== undefined ) renderer.toneMappingExposure = project.toneMappingExposure;
-			if ( project.physicallyCorrectLights !== undefined ) renderer.physicallyCorrectLights = project.physicallyCorrectLights;
 
 			this.setScene( loader.parse( json.scene ) );
 			this.setCamera( loader.parse( json.camera ) );
@@ -116,6 +113,12 @@ var APP = {
 
 		};
 
+		this.setPixelRatio = function ( pixelRatio ) {
+
+			renderer.setPixelRatio( pixelRatio );
+
+		};
+
 		this.setSize = function ( width, height ) {
 
 			this.width = width;
@@ -128,11 +131,7 @@ var APP = {
 
 			}
 
-			if ( renderer ) {
-
-				renderer.setSize( width, height );
-
-			}
+			renderer.setSize( width, height );
 
 		};
 
@@ -146,7 +145,7 @@ var APP = {
 
 		}
 
-		var time, prevTime;
+		var time, startTime, prevTime;
 
 		function animate() {
 
@@ -154,7 +153,7 @@ var APP = {
 
 			try {
 
-				dispatch( events.update, { time: time, delta: time - prevTime } );
+				dispatch( events.update, { time: time - startTime, delta: time - prevTime } );
 
 			} catch ( e ) {
 
@@ -172,7 +171,7 @@ var APP = {
 
 			if ( renderer.xr.enabled ) dom.append( vrButton );
 
-			prevTime = performance.now();
+			startTime = prevTime = performance.now();
 
 			document.addEventListener( 'keydown', onKeyDown );
 			document.addEventListener( 'keyup', onKeyUp );
@@ -199,6 +198,14 @@ var APP = {
 			dispatch( events.stop, arguments );
 
 			renderer.setAnimationLoop( null );
+
+		};
+
+		this.render = function ( time ) {
+
+			dispatch( events.update, { time: time * 1000, delta: 0 /* TODO */ } );
+
+			renderer.render( scene, camera );
 
 		};
 
