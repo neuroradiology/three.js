@@ -12,10 +12,6 @@
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> xr - sculpt
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -42,7 +38,6 @@
 
 			init();
 			initBlob();
-			animate();
 
 			function init() {
 
@@ -73,6 +68,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				renderer.xr.enabled = true;
 				container.appendChild( renderer.domElement );
 
@@ -172,12 +168,6 @@
 
 			//
 
-			function animate() {
-
-				renderer.setAnimationLoop( render );
-
-			}
-
 			function transformPoint( vector ) {
 
 				vector.x = ( vector.x + 1.0 ) / 2.0;
@@ -231,7 +221,7 @@
 
 			}
 
-			function render() {
+			function animate() {
 
 				handleController( controller1 );
 				handleController( controller2 );

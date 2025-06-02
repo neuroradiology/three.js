@@ -21,10 +21,6 @@
 			(model from <a href="https://www.mixamo.com/" target="_blank" rel="noopener">mixamo.com</a>)<br/>
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -152,7 +148,7 @@
 
 					createPanel();
 
-					animate();
+					renderer.setAnimationLoop( animate );
 
 				} );
 
@@ -398,8 +394,6 @@
 
 				// Render loop
 
-				requestAnimationFrame( animate );
-
 				for ( let i = 0; i !== numAnimations; ++ i ) {
 
 					const action = allActions[ i ];
@@ -417,9 +411,9 @@
 
 				mixer.update( mixerUpdateDelta );
 
-				stats.update();
-
 				renderer.render( scene, camera );
+
+				stats.update();
 
 			}
 

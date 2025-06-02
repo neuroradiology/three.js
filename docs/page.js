@@ -67,7 +67,7 @@ function onDocumentLoad() {
 	text = text.replace( /\[link:([\w\:\/\.\-\_\(\)\?\#\=\!\~]+)\]/gi, '<a href="$1" target="_blank">$1</a>' ); // [link:url]
 	text = text.replace( /\[link:([\w:/.\-_()?#=!~]+) ([\w\p{L}:/.\-_'\s]+)\]/giu, '<a href="$1" target="_blank">$2</a>' ); // [link:url title]
 	text = text.replace( /\*([\u4e00-\u9fa5\w\d\-\(\"\（\“][\u4e00-\u9fa5\w\d\ \/\+\-\(\)\=\,\.\（\）\，\。"]*[\u4e00-\u9fa5\w\d\"\)\”\）]|\w)\*/gi, '<strong>$1</strong>' ); // *text*
-	text = text.replace( /\`(.*?)\`/gi, '<code class="inline">$1</code>' ); // `code`
+	text = text.replace( /\`(.*?)\`/gs, '<code class="inline">$1</code>' ); // `code`
 
 	text = text.replace( /\[example:([\w\_]+)\]/gi, '[example:$1 $1]' ); // [example:name] to [example:name title]
 	text = text.replace( /\[example:([\w\_]+) ([\w\:\/\.\-\_ \s]+)\]/gi, '<a href="../examples/#$1" target="_blank">$2</a>' ); // [example:name title]
@@ -125,6 +125,34 @@ function onDocumentLoad() {
 
 	}
 
+	// create copy button for copying code snippets
+
+	function addCopyButton( element ) {
+
+		const copyButton = document.createElement( 'button' );
+		copyButton.className = 'copy-btn';
+
+		element.appendChild( copyButton );
+
+		copyButton.addEventListener( 'click', function () {
+
+			const codeContent = element.textContent;
+			navigator.clipboard.writeText( codeContent ).then( () => {
+
+				copyButton.classList.add( 'copied' );
+
+				setTimeout( () => {
+
+					copyButton.classList.remove( 'copied' );
+
+				}, 1000 );
+
+			} );
+
+		} );
+
+	}
+
 	const elements = document.getElementsByTagName( 'code' );
 
 	for ( let i = 0; i < elements.length; i ++ ) {
@@ -132,6 +160,12 @@ function onDocumentLoad() {
 		const element = elements[ i ];
 
 		element.textContent = dedent( element.textContent );
+
+		if ( ! element.classList.contains( 'inline' ) ) {
+
+			addCopyButton( element );
+
+		}
 
 	}
 
@@ -171,12 +205,11 @@ function onDocumentLoad() {
 		for ( let i = 0; i < elements.length; i ++ ) {
 
 			const e = elements[ i ];
+			e.currentStyle = { 'whiteSpace': 'pre-wrap' }; // Workaround for Firefox, see #30008
 			e.className += ' prettyprint';
 			e.setAttribute( 'translate', 'no' );
 
 		}
-
-		prettyPrint(); // eslint-disable-line no-undef
 
 	};
 
